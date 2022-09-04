@@ -2,7 +2,8 @@
   "name": "factory-sim",
   // "image": "sra405/factory-sim:latest",
 	"build": {
-		"dockerfile": "./.dev.Dockerfile"
+		"dockerfile": ".dev.Dockerfile",
+		"context": ".."
 	},
 
   // Set *default* container specific settings.json values on container create.
