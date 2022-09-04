@@ -1,4 +1,4 @@
-FROM gitpod/workspace-full:latest
+FROM gitpod/workspace-base:latest
 
 USER root
 # Install util tools.
@@ -27,12 +27,25 @@ RUN chown -R gitpod:gitpod /opt/conda \
     && chown -R gitpod:gitpod /home/gitpod/.conda \
     && chmod -R 777 /home/gitpod/.conda
 
+## ADD CONDA PATH TO LINUX PATH 
+ENV PATH /opt/conda/bin:$PATH
+
 COPY environment.yaml environment.yaml
 
-RUN /opt/conda/bin/conda env update --name base --file environment.yaml --prune
+# make conda environment
+RUN conda env create --file environment.yaml --name dev_env
+
+## Link to new python env
+RUN ln -s /opt/conda/envs/dev_env/bin/python /usr/bin/python
 
 # Give back control
 USER root
 
 # Cleaning
 RUN apt-get clean
+
+SHELL ["conda", "run", "--no-capture-output", "-n", "dev_env", "/bin/bash", "-c"]
+# activate
+RUN echo "source activate dev_env" > ~/.bashrc
+# RUN conda activate dev_env
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "dev_env", "/bin/bash", "-c"]
