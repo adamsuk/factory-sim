@@ -1,4 +1,4 @@
-image: ghcr.io/sra405/factory-sim:latest
+image: sra405/factory-sim:latest
 
 vscode:
   extensions:
