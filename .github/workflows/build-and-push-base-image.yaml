@@ -35,5 +35,5 @@ jobs:
           file: .gitpod/.gitpod.Dockerfile
           push: true
           tags: |
-            sra405/flask-boilerplate:latest
-            sra405/flask-boilerplate:${{ steps.vars.outputs.VERSION }}
+            sra405/factory-sim:latest
+            sra405/factory-sim:${{ steps.vars.outputs.VERSION }}
