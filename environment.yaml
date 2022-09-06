@@ -2,8 +2,8 @@ channels:
   - anaconda
   - defaults
 dependencies:
-  - ca-certificates=2020.10.14
-  - certifi=2020.6.20
+  - ca-certificates=2022.07.19
+  - certifi=2022.6.15
   - click=7.1.2
   - flask=1.1.2
   - itsdangerous=1.1.0
@@ -15,7 +15,7 @@ dependencies:
   - libstdcxx-ng=9.1.0
   - markupsafe=1.1.1
   - ncurses=6.2
-  - openssl=1.1.1h
+  - openssl=1.1.1q
   - pip=20.2.4
   - python=3.8.5
   - readline=8.0
@@ -26,3 +26,5 @@ dependencies:
   - wheel=0.35.1
   - xz=5.2.5
   - zlib=1.2.11
+  - pip:
+    - simpy==4.0.1
