@@ -1,25 +1,54 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/miniconda
 {
-  "name": "factory-sim",
-  // "image": "sra405/factory-sim:latest",
-	"build": {
-		"dockerfile": ".dev.Dockerfile",
-		"context": ".."
-	},
+  "name": "Micromamba Factory Sim",
+  "build": {
+    "context": "..",
+    "dockerfile": "Dockerfile"
+  },
 
-  // Set *default* container specific settings.json values on container create.
-	"settings": {},
+  "hostRequirements": {
+    "cpus": 4
+  },
 
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [],
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [],
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  "forwardPorts": [5000],
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	// "postCreateCommand": "uname -a",
+  "portsAttributes": {
+    "5000": {
+      "label": "Application",
+      "onAutoForward": "openPreview"
+    }
+  },
 
-	// Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
-	// "remoteUser": "linuxbrew"
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "",
 
-	"postAttachCommand": "bash"
+  "postAttachCommand": "python src/app.py",
+
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/conda/bin/python"
+      },
+      "extensions": [
+        "ms-python.python",
+        "donjayamanne.python-extension-pack",
+        "ms-toolsai.jupyter",
+        "GitHub.codespaces",
+        "ms-azuretools.vscode-docker",
+        "DavidAnson.vscode-markdownlint"
+      ]
+    },
+    "codespaces": {
+      "openFiles": ["README.md", "src/app.py"]
+    }
+  }
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
 }

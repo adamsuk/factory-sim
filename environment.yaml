@@ -1,3 +1,4 @@
+name: base
 channels:
   - anaconda
   - defaults
@@ -27,4 +28,6 @@ dependencies:
   - xz=5.2.5
   - zlib=1.2.11
   - pip:
-    - simpy==4.0.1
+      - simpy==4.0.1
+
+prefix: "/opt/conda"

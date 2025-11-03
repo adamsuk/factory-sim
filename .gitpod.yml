@@ -1,5 +1,0 @@
-image: sra405/factory-sim:latest
-
-vscode:
-  extensions:
-    - ms-python.python
