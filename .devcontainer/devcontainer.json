@@ -26,8 +26,7 @@
 
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "",
-
-  "postAttachCommand": "python src/app.py",
+  "postAttachCommand": "",
 
   // Configure tool-specific properties.
   "customizations": {
@@ -45,7 +44,7 @@
       ]
     },
     "codespaces": {
-      "openFiles": ["README.md", "src/app.py"]
+      "openFiles": ["README.md", "src/sim.py"]
     }
   }
 

@@ -11,7 +11,6 @@ def factory(env):
     # initial setup
     belt = Belt(belt_size)
     workers = {}
-    workers_bottom = []
     complete_parts = 0
     waste_parts = 0
     total_parts = 0
