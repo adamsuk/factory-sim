@@ -7,7 +7,7 @@ await esbuild.build({
   entryPoints: ["viz/demo/main.tsx"],
   bundle: true,
   format: "esm",
-  outfile: "viz/demo/dist/app.js",
+  outfile: `viz/demo/dist/app.${ref}.js`,
   jsx: "automatic",
   define: { "process.env.NODE_ENV": '"production"' },
 });

@@ -93,7 +93,11 @@ async function runSim(inputs: Inputs, sourceRef: string): Promise<RunResult> {
 import json
 files = sources.to_py()
 raw = inputs.to_py()
-ns = {}
+if not isinstance(files, dict):
+    files = {str(key): files[key] for key in files.keys()}
+if not isinstance(raw, dict):
+    raw = {str(key): raw[key] for key in raw.keys()}
+ns = {"__file__": "viz/runner.py"}
 exec(files["runner.py"], ns)
 modules = {key: files[key] for key in files if key != "runner.py"}
 json.dumps(ns["run"](modules, raw))
