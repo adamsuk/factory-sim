@@ -1,15 +1,19 @@
 # Factory sim viewer
 
-Reads `src/` from this repo. It does not copy `part.py`, `belt.py`, `worker.py`, `const.py` or `sim.py`.
+Import this repo. Do not copy `src/` or the component into the site.
 
-`runner.py` loads those files from `../src`. `sim.py` still autoruns on a normal import, so the runner drops that trailing block in memory and leaves the file alone.
+```bash
+npm install github:adamsuk/factory-sim#v0.1.0
+```
 
-The React component fetches the same `src/*.py` files, plus this runner, from the repo. The site does not vendor the sim.
+```tsx
+import FactorySim from "factory-sim-viz";
+```
 
-## Site
+The package reads `src/*.py` and `viz/runner.py` from the installed ref at runtime. `src/` is not modified. `sim.py` still autoruns on a normal import, so the runner removes that trailing block in memory.
 
-Copy only `viz/src` into `components/sandbox/factorySim`. The component loads:
+Next.js needs `transpilePackages: ["factory-sim-viz"]`.
 
-`https://raw.githubusercontent.com/adamsuk/factory-sim/<ref>/src/<module>.py`
+## Release test
 
-`<ref>` defaults to `main`. Point it at another branch only while this viewer is unmerged.
+Publishing a GitHub release runs `.github/workflows/pages.yml` and deploys a Pages app that loads `src/` from that tag. Run it by hand with the Actions `workflow_dispatch` event before the first tag. Pages must be set to deploy from GitHub Actions.

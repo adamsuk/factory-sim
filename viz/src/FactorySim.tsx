@@ -1,8 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const REPO = "adamsuk/factory-sim";
-const REF = "main";
-const RAW = `https://raw.githubusercontent.com/${REPO}/${REF}`;
 const MODULES = ["part.py", "belt.py", "worker.py", "const.py", "sim.py"];
 const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
 
@@ -75,9 +73,10 @@ function getPyodide() {
   return pyodidePromise;
 }
 
-async function loadSources() {
+async function loadSources(sourceRef: string) {
+  const raw = `https://raw.githubusercontent.com/${REPO}/${sourceRef}`;
   const names = [...MODULES, "runner.py"];
-  const paths = MODULES.map((name) => `${RAW}/src/${name}`).concat(`${RAW}/viz/runner.py`);
+  const paths = MODULES.map((name) => `${raw}/src/${name}`).concat(`${raw}/viz/runner.py`);
   const texts = await Promise.all(paths.map(async (url) => {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`Could not import ${url}`);
@@ -86,9 +85,9 @@ async function loadSources() {
   return Object.fromEntries(names.map((name, index) => [name, texts[index]]));
 }
 
-async function runSim(inputs: Inputs): Promise<RunResult> {
+async function runSim(inputs: Inputs, sourceRef: string): Promise<RunResult> {
   const pyodide = await getPyodide();
-  pyodide.globals.set("sources", await loadSources());
+  pyodide.globals.set("sources", await loadSources(sourceRef));
   pyodide.globals.set("inputs", inputs);
   const payload = await pyodide.runPythonAsync(`
 import json
@@ -120,7 +119,7 @@ function WorkerRow({ side, frame }: { side: string; frame: Frame }) {
   );
 }
 
-export default function FactorySim() {
+export default function FactorySim({ sourceRef = "main" }: { sourceRef?: string }) {
   const [ticks, setTicks] = useState(40);
   const [beltSize, setBeltSize] = useState(5);
   const [delay, setDelay] = useState(4);
@@ -150,9 +149,9 @@ export default function FactorySim() {
   useEffect(() => {
     const id = runId.current + 1;
     runId.current = id;
-    setStatus(`Importing src from ${REPO}@${REF}`);
+    setStatus(`Importing src from ${REPO}@${sourceRef}`);
     setError("");
-    runSim(inputs).then((next) => {
+    runSim(inputs, sourceRef).then((next) => {
       if (runId.current !== id) return;
       setResult(next);
       setCursor(0);
@@ -163,7 +162,7 @@ export default function FactorySim() {
       setError(reason instanceof Error ? reason.message : "Sim failed");
       setStatus("Sim failed");
     });
-  }, [inputs]);
+  }, [inputs, sourceRef]);
 
   useEffect(() => {
     if (!playing || !result?.frames.length) return undefined;
