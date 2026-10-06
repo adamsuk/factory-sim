@@ -91,11 +91,12 @@ async function runSim(inputs: Inputs, sourceRef: string): Promise<RunResult> {
   pyodide.globals.set("inputs", inputs);
   const payload = await pyodide.runPythonAsync(`
 import json
+files = sources.to_py()
+raw = inputs.to_py()
 ns = {}
-exec(sources["runner.py"], ns)
-raw = inputs.to_py() if hasattr(inputs, "to_py") else dict(inputs)
-files = {key: sources[key] for key in sources.keys() if key != "runner.py"}
-json.dumps(ns["run"](files, raw))
+exec(files["runner.py"], ns)
+modules = {key: files[key] for key in files if key != "runner.py"}
+json.dumps(ns["run"](modules, raw))
 `);
   return JSON.parse(String(payload)) as RunResult;
 }
