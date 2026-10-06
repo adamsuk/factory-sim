@@ -192,6 +192,20 @@ export default function FactorySim({ sourceRef = "main" }: { sourceRef?: string 
           <button type="button" className="rounded-full bg-gray-200 px-3 py-1 text-sm dark:bg-gray-800" onClick={() => result && setCursor((value) => Math.min(result.frames.length - 1, value + 1))}>Step</button>
         </div>
       </div>
+
+      <details className="mb-4 rounded-md border border-gray-200 bg-white p-3 text-sm dark:border-gray-700 dark:bg-gray-950">
+        <summary className="cursor-pointer font-medium">How to use it</summary>
+        <div className="mt-3 space-y-2 text-gray-600 dark:text-gray-300">
+          <p>Same model as the original sim: a part has a type, the belt moves those parts, a worker peeks and picks what it still needs, and a complete hand becomes P after the assemble delay.</p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>Play walks the ticks. Pause, then Step or the slider, to inspect one tick.</li>
+            <li>Infeed is the left slot. Each tick pushes a new part, or an empty slot, in from the left. Whatever falls off the right is finished or waste.</li>
+            <li>Ticks, belt size, assemble delay, seed, part types, and the parts a worker must collect are the const values. Changing one re-runs src/.</li>
+            <li>Top and bottom turn those worker rows off. A green hand is assembling and will place P when the delay elapses and the slot is empty.</li>
+            <li>The original sim log is the same TIME / PICKING PART / COMPLETE PART printout, under the belt.</li>
+          </ul>
+        </div>
+      </details>
       <div className="mb-4 grid gap-3 sm:grid-cols-4">
         <label className="text-xs text-gray-500">Ticks
           <input className="mt-1 w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-950" type="number" min={5} max={200} value={ticks} onChange={(event) => setTicks(Number(event.target.value))} />
@@ -243,6 +257,9 @@ export default function FactorySim({ sourceRef = "main" }: { sourceRef?: string 
         {showLog ? "Hide" : "Show"} original sim log
       </button>
       {showLog && <pre className="mt-2 max-h-48 overflow-auto rounded bg-gray-900 p-3 text-[11px] text-gray-100">{result?.log || "No log yet"}</pre>}
+      <p className="mt-4 text-sm">
+        <a className="underline" href={`https://github.com/${REPO}/tree/${sourceRef}`}>factory-sim {sourceRef}</a>
+      </p>
     </div>
   );
 }

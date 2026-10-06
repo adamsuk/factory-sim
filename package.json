@@ -1,6 +1,6 @@
 {
   "name": "factory-sim-viz",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Browser viewer for adamsuk/factory-sim. Loads src/ from the repo; does not copy it.",
   "license": "MIT",
   "type": "module",
