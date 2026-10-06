@@ -11,7 +11,10 @@ import types
 from pathlib import Path
 
 AUTORUN = "\nenv = simpy.Environment()"
-SRC = Path(__file__).resolve().parents[1] / "src"
+try:
+    SRC = Path(__file__).resolve().parents[1] / "src"
+except NameError:
+    SRC = None
 MODULES = ("part.py", "belt.py", "worker.py", "const.py", "sim.py")
 
 

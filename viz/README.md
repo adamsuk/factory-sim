@@ -3,7 +3,7 @@
 Import this repo. Do not copy `src/` or the component into the site.
 
 ```bash
-npm install github:adamsuk/factory-sim#v0.2.1
+npm install github:adamsuk/factory-sim#v0.2.2
 ```
 
 ```tsx
