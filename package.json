@@ -1,0 +1,21 @@
+{
+  "name": "factory-sim-viz",
+  "version": "0.1.0",
+  "description": "Browser viewer for adamsuk/factory-sim. Loads src/ from the repo; does not copy it.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./viz/src/index.ts",
+  "types": "./viz/src/index.ts",
+  "exports": {
+    ".": "./viz/src/index.ts"
+  },
+  "files": [
+    "viz/src",
+    "viz/runner.py",
+    "src"
+  ],
+  "peerDependencies": {
+    "react": ">=17",
+    "react-dom": ">=17"
+  }
+}
