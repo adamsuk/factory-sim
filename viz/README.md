@@ -1,30 +1,15 @@
 # Factory sim viewer
 
-A browser viewer for [factory-sim](https://github.com/adamsuk/factory-sim). It does not change `src/`.
+Reads `src/` from this repo. It does not copy `part.py`, `belt.py`, `worker.py`, `const.py` or `sim.py`.
 
-`viz/engine/part.py`, `belt.py`, `worker.py`, `const.py` and `sim.py` are verbatim copies of `src/`. `runner.py` loads those strings, overrides the `const` globals, and cuts the `env.run(...)` autorun off in memory before exec. The copies on disk still contain the autorun.
+`runner.py` loads those files from `../src`. `sim.py` still autoruns on a normal import, so the runner drops that trailing block in memory and leaves the file alone.
 
-The React component runs that runner in Pyodide, so the belt you see is the SimPy loop, not a port. Inputs (ticks, belt size, assemble delay, seed, part types, the part a worker must collect, worker sides) are passed in and the run is replayed.
+The React component fetches the same `src/*.py` files, plus this runner, from the repo. The site does not vendor the sim.
 
-## Use it on sradams.co.uk
+## Site
 
-Copy into the site repo:
+Copy only `viz/src` into `components/sandbox/factorySim`. The component loads:
 
-- `viz/src/FactorySim.tsx` -> `components/sandbox/factorySim/FactorySim.tsx`
-- `viz/src/engineSources.ts` -> `components/sandbox/factorySim/engineSources.ts`
-- `viz/src/index.ts` -> `components/sandbox/factorySim/index.ts`
+`https://raw.githubusercontent.com/adamsuk/factory-sim/<ref>/src/<module>.py`
 
-Register it in `components/sandbox/index.tsx`:
-
-```tsx
-import FactorySim from './factorySim';
-
-const sandboxes = [
-  { title: 'Factory sim', slug: 'factory-sim', component: FactorySim },
-  // existing entries
-];
-```
-
-No extra npm dependency. Pyodide and SimPy load from a CDN the first time the sandbox opens.
-
-The site PR `factory-sim-sandbox` does this copy. If the engine files here change, regenerate `engineSources.ts` from `viz/engine` and copy it again.
+`<ref>` defaults to `main`. Point it at another branch only while this viewer is unmerged.

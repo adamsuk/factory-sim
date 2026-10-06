@@ -1,13 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { engineSources } from "./engineSources";
 
-type Hand = {
-  side: string;
-  pos: number;
-  hand: Array<string | null>;
-  busyUntil: number | null;
-};
+const REPO = "adamsuk/factory-sim";
+const REF = "main";
+const RAW = `https://raw.githubusercontent.com/${REPO}/${REF}`;
+const MODULES = ["part.py", "belt.py", "worker.py", "const.py", "sim.py"];
+const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
 
+type Hand = { side: string; pos: number; hand: Array<string | null>; busyUntil: number | null };
 type Frame = {
   t: number;
   belt: Array<string | null>;
@@ -17,12 +16,7 @@ type Frame = {
   finished: number;
   waste: number;
 };
-
-type RunResult = {
-  frames: Frame[];
-  log: string;
-};
-
+type RunResult = { frames: Frame[]; log: string };
 type Inputs = {
   sim_time: number;
   belt_size: number;
@@ -32,8 +26,11 @@ type Inputs = {
   complete_part: string[];
   worker_positions: string[];
 };
-
-const PYODIDE = "https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js";
+type Pyodide = {
+  loadPackage: (name: string) => Promise<void>;
+  runPythonAsync: (code: string) => Promise<unknown>;
+  globals: { set: (name: string, value: unknown) => void };
+};
 
 const PART_COLOURS: Record<string, string> = {
   A: "bg-sky-500 text-white",
@@ -64,17 +61,7 @@ function loadPyodideScript(): Promise<(options: { indexURL: string }) => Promise
   });
 }
 
-type Pyodide = {
-  loadPackage: (name: string) => Promise<void>;
-  runPythonAsync: (code: string) => Promise<void>;
-  globals: {
-    set: (name: string, value: unknown) => void;
-    get: (name: string) => { toJs: (options: { dict_converter: typeof Object.fromEntries }) => RunResult };
-  };
-};
-
 let pyodidePromise: Promise<Pyodide> | null = null;
-
 function getPyodide() {
   if (!pyodidePromise) {
     pyodidePromise = (async () => {
@@ -88,9 +75,20 @@ function getPyodide() {
   return pyodidePromise;
 }
 
+async function loadSources() {
+  const names = [...MODULES, "runner.py"];
+  const paths = MODULES.map((name) => `${RAW}/src/${name}`).concat(`${RAW}/viz/runner.py`);
+  const texts = await Promise.all(paths.map(async (url) => {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Could not import ${url}`);
+    return response.text();
+  }));
+  return Object.fromEntries(names.map((name, index) => [name, texts[index]]));
+}
+
 async function runSim(inputs: Inputs): Promise<RunResult> {
   const pyodide = await getPyodide();
-  pyodide.globals.set("sources", engineSources);
+  pyodide.globals.set("sources", await loadSources());
   pyodide.globals.set("inputs", inputs);
   const payload = await pyodide.runPythonAsync(`
 import json
@@ -98,8 +96,7 @@ ns = {}
 exec(sources["runner.py"], ns)
 raw = inputs.to_py() if hasattr(inputs, "to_py") else dict(inputs)
 files = {key: sources[key] for key in sources.keys() if key != "runner.py"}
-result = ns["run"](files, raw)
-json.dumps(result)
+json.dumps(ns["run"](files, raw))
 `);
   return JSON.parse(String(payload)) as RunResult;
 }
@@ -135,7 +132,7 @@ export default function FactorySim() {
   const [result, setResult] = useState<RunResult | null>(null);
   const [cursor, setCursor] = useState(0);
   const [playing, setPlaying] = useState(true);
-  const [status, setStatus] = useState("Loading the sim");
+  const [status, setStatus] = useState("Loading src from factory-sim");
   const [error, setError] = useState("");
   const [showLog, setShowLog] = useState(false);
   const runId = useRef(0);
@@ -153,14 +150,14 @@ export default function FactorySim() {
   useEffect(() => {
     const id = runId.current + 1;
     runId.current = id;
-    setStatus("Running factory-sim");
+    setStatus(`Importing src from ${REPO}@${REF}`);
     setError("");
     runSim(inputs).then((next) => {
       if (runId.current !== id) return;
       setResult(next);
       setCursor(0);
       setPlaying(true);
-      setStatus(`Ran ${next.frames.length} ticks in the original modules`);
+      setStatus(`Ran ${next.frames.length} ticks from src/`);
     }).catch((reason: unknown) => {
       if (runId.current !== id) return;
       setError(reason instanceof Error ? reason.message : "Sim failed");
@@ -183,17 +180,14 @@ export default function FactorySim() {
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold">Factory sim</h2>
-          <p className="text-sm text-gray-500">{status}. Src modules are unchanged; inputs override const in memory.</p>
+          <p className="text-sm text-gray-500">{status}. Inputs override const in memory; src files are not copied.</p>
         </div>
         <div className="flex gap-2">
-          <button type="button" className="rounded-full bg-gray-900 px-3 py-1 text-sm text-white dark:bg-white dark:text-gray-900" onClick={() => setPlaying((value) => !value)}>
-            {playing ? "Pause" : "Play"}
-          </button>
+          <button type="button" className="rounded-full bg-gray-900 px-3 py-1 text-sm text-white dark:bg-white dark:text-gray-900" onClick={() => setPlaying((value) => !value)}>{playing ? "Pause" : "Play"}</button>
           <button type="button" className="rounded-full bg-gray-200 px-3 py-1 text-sm dark:bg-gray-800" onClick={() => setCursor((value) => Math.max(0, value - 1))}>Step back</button>
           <button type="button" className="rounded-full bg-gray-200 px-3 py-1 text-sm dark:bg-gray-800" onClick={() => result && setCursor((value) => Math.min(result.frames.length - 1, value + 1))}>Step</button>
         </div>
       </div>
-
       <div className="mb-4 grid gap-3 sm:grid-cols-4">
         <label className="text-xs text-gray-500">Ticks
           <input className="mt-1 w-full rounded border border-gray-300 bg-white px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-950" type="number" min={5} max={200} value={ticks} onChange={(event) => setTicks(Number(event.target.value))} />
@@ -216,9 +210,7 @@ export default function FactorySim() {
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={top} onChange={(event) => setTop(event.target.checked)} /> Top workers</label>
         <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={bottom} onChange={(event) => setBottom(event.target.checked)} /> Bottom workers</label>
       </div>
-
       {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
-
       {frame && (
         <div className="space-y-2">
           <div className="flex flex-wrap gap-4 text-sm">
@@ -243,7 +235,6 @@ export default function FactorySim() {
           <input className="w-full" type="range" min={0} max={Math.max(0, (result?.frames.length || 1) - 1)} value={cursor} onChange={(event) => { setPlaying(false); setCursor(Number(event.target.value)); }} />
         </div>
       )}
-
       <button type="button" className="mt-3 text-xs text-gray-500 underline" onClick={() => setShowLog((value) => !value)}>
         {showLog ? "Hide" : "Show"} original sim log
       </button>

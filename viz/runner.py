@@ -1,33 +1,43 @@
-"""Run factory-sim without modifying its modules.
+"""Run factory-sim by importing src/. Does not copy or edit those modules.
 
-The files in this directory are verbatim copies of factory-sim/src.
-This runner loads them in memory, overrides const globals, and strips the
-autorun at the bottom of sim.py before exec. Nothing on disk is rewritten.
+sim.py autoruns on import, so it is read from disk and the trailing
+`env = simpy.Environment()` block is removed only in memory.
 """
 
 import io
 import random
 import sys
 import types
+from pathlib import Path
 
 AUTORUN = "\nenv = simpy.Environment()"
+SRC = Path(__file__).resolve().parents[1] / "src"
+MODULES = ("part.py", "belt.py", "worker.py", "const.py", "sim.py")
+
+
+def sources_from_src(src_dir=SRC):
+    src_dir = Path(src_dir)
+    missing = [name for name in MODULES if not (src_dir / name).is_file()]
+    if missing:
+        raise FileNotFoundError(f"{src_dir} is missing {', '.join(missing)}")
+    return {name: (src_dir / name).read_text() for name in MODULES}
 
 
 def _module(name, source):
     if name == "sim":
         cut = source.find(AUTORUN)
         if cut == -1:
-            raise RuntimeError("sim.py autorun marker missing; refusing to import it")
+            raise RuntimeError("src/sim.py autorun marker missing; refusing to import it")
         source = source[:cut]
     module = types.ModuleType(name)
     module.__dict__["__name__"] = name
-    exec(compile(source, f"{name}.py", "exec"), module.__dict__)
+    exec(compile(source, f"src/{name}.py", "exec"), module.__dict__)
     sys.modules[name] = module
     return module
 
 
 def run(sources, inputs):
-    """Return one frame per tick. sources maps filename -> text."""
+    """sources is the text of src/part.py, belt.py, worker.py, const.py, sim.py."""
     for name in ("part", "const", "belt", "worker", "sim"):
         sys.modules.pop(name, None)
 
@@ -61,7 +71,6 @@ def run(sources, inputs):
     belt_ref = {}
     workers = []
     stats = {"total": 0, "complete": 0, "waste": 0}
-
     Belt = sys.modules["belt"].Belt
     Worker = sys.modules["worker"].Worker
     orig_belt_init = Belt.__init__
@@ -89,7 +98,6 @@ def run(sources, inputs):
     Belt.__init__ = belt_init
     Worker.__init__ = worker_init
     Belt.add = add
-
     sink = io.StringIO()
     previous = sys.stdout
     sys.stdout = sink
@@ -121,8 +129,8 @@ def run(sources, inputs):
         Worker.__init__ = orig_worker_init
         Belt.add = orig_add
 
-    return {
-        "frames": frames,
-        "inputs": overrides,
-        "log": sink.getvalue(),
-    }
+    return {"frames": frames, "inputs": overrides, "log": sink.getvalue()}
+
+
+def run_from_src(inputs, src_dir=SRC):
+    return run(sources_from_src(src_dir), inputs)
